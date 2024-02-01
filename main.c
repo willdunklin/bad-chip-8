@@ -24,7 +24,7 @@ uint8_t sound_timer; // TODO: decrement at 60hz
 
 void step() {
     printf("\n");
-    printf("PC: %04X  |  I: %04X\n", pc, I);
+    printf("PC: %04X  |  I: %04X {%02X}\n", pc, I, memory[I]);
     printf("V[0-2]: %02X, %02X, %02X\n", V(0), V(1), V(2));
     uint16_t opcode = memory[pc] << 8 | memory[pc + 1]; // read big-endian 16-bit opcode
     printf("Opcode: %04X\n", opcode);
@@ -257,7 +257,7 @@ int main(int argc, char** argv) {
     memcpy(memory, input.items, input.count);
 
     // just test a few steps for now
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 60; i++) {
         step();
     }
 
