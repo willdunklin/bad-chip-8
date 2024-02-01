@@ -146,7 +146,7 @@ char* token_next(char* line) {
 Instruction token_extract_from_line(char* line) {
     Instruction instruction = {0};
 
-    char* str = (char*)malloc(2048); // assuming that lines will be <2048 chars
+    char* str = (char*)malloc(2048); // assuming that lines will be <2048 chars ((probably))
     char* start = str;
     memset(str, 0, 2048);
     strcpy(str, line);
