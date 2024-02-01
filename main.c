@@ -7,95 +7,98 @@
 #include "command.h"
 #include "display.h"
 
-#define V(X)  registers[X]  // V0-VF (must use numeric index 0-15, 0x0-0xf)
+#define V(X)  registers[X]   // V0-VF (must use numeric index 0-15, 0x0-0xf)
 
-uint8_t memory[4096];
-uint8_t registers[16]; // V0-VF
-uint16_t I;            // index register (used for memory addresses)
-uint16_t pc;           // program counter
-uint8_t sp;            // stack pointer
-uint8_t skip_next = 0; // additional flad used in conditionals
+uint8_t memory[4096] = {0};
+uint16_t I;                  // index register (used for memory addresses)
+uint16_t pc = 0x200;         // program counter (0x200 is presumed entrypoint)
+uint8_t registers[16] = {0}; // V0-VF registers
+uint16_t stack[16] = {0};    // stack
+uint8_t sp = 0;              // stack pointer
+uint8_t skip_next = 0;       // additional flad used in conditionals
 
 uint8_t delay_timer; // TODO: decrement at 60hz
 uint8_t sound_timer; // TODO: decrement at 60hz
 
-void run_command(command c) {
+void run_command(Command c) {
     // skip_next = 0;
 
     switch(c.type) {
-        // clear
+        // cls
         case I_00E0: {
             clear_display();
             break;
         }
-        // return
+        // ret
         case I_00EE: {
-            pc = memory[sp];
+            pc = stack[sp];
             sp -= 1;
+            sp = (sp + 16) & 0xF; // wrap around
             break;
         }
-        // jump NNN
+        // jmp nnn
         case I_1NNN: {
             pc = c.n;
             break;
         }
-        // call NNN
+        // call nnn
         case I_2NNN: {
             sp += 1;
-            memory[sp] = pc;
+            sp = (sp + 16) & 0xF; // wrap around
+            stack[sp] = pc;
             pc = c.n;
             break;
         }
 
-        // if VX == NN then
+        // se Vx nn
         case I_3XNN: {
             if(V(c.x) == (c.n & 0xFF)) skip_next = 1;
             break;
         }
-        // if VX != NN then
+        // sne Vx nn
         case I_4XNN: {
             if(V(c.x) != (c.n & 0xFF)) skip_next = 1;
             break;
         }
-        // if VX != VY then
+        // se Vx Vy
         case I_5XY0: {
             if(V(c.x) != V(c.y))       skip_next = 1;
             break;
         }
 
-        // VX = NN
+        // mov Vx nn
         case I_6XNN: {
             V(c.x) = c.n & 0xFF;
             break;
         }
-        // VX += NN
+        // add Vx nn
         case I_7XNN: {
             V(c.x) += c.n & 0xFF;
             break;
         }
 
-        // VX = VY
+        // mov Vx Vy
         case I_8XY0: {
             V(c.x) = V(c.y);
             break;
         }
-        // VX |= VY
+        // or Vx Vy
         case I_8XY1: {
             V(c.x) |= V(c.y);
             break;
         }
-        // VX &= VY
+        // and Vx Vy
         case I_8XY2: {
             V(c.x) &= V(c.y);
             break;
         }
-        // VX ^= VY
+        // xor Vx Vy
         case I_8XY3: {
             V(c.x) ^= V(c.y);
             break;
         }
 
-        // VX += VY  (VF = 1 on carry)
+        // add Vx Vy  (VF = 1 on carry)
         case I_8XY4: {
             if(V(c.x) + V(c.y) > 0xFF) {
                 V(0xF) = 1;
@@ -105,7 +108,7 @@ void run_command(command c) {
             V(c.x) += V(c.y);
             break;
         }
-        // VX -= VY  (VF = 0 on borrow)
+        // sub Vx Vy  (VF = 0 on borrow)
         case I_8XY5: {
             if(V(c.x) >= V(c.y)) {
                 V(0xF) = 1;
@@ -115,13 +118,13 @@ void run_command(command c) {
             V(c.x) -= V(c.y);
             break;
         }
-        // VX >>= VY  (VF = LSB)
+        // shr Vx  (VF = LSB)
         case I_8XY6: {
             V(0xF) = V(c.x) & 0x1; // LSB
-            V(c.x) >>= V(c.y);
+            V(c.x) >>= 1;
             break;
         }
-        // VX = VY - VX  (VF = 0 on borrow)
+        // subn Vx Vy  (VF = 0 on borrow)
         case I_8XY7: {
             if(V(c.y) >= V(c.x)) {
                 V(0xF) = 1;
@@ -131,86 +134,86 @@ void run_command(command c) {
             V(c.x) = V(c.y) - V(c.x);
             break;
         }
-        // VX <<= VY  (VF = MSB)
+        // shl Vx  (VF = MSB)
         case I_8XYE: {
             V(0xF) = (V(c.x) >> 7) & 0x1; // MSB
-            V(c.x) <<= V(c.y);
+            V(c.x) <<= 1;
             break;
         }
 
-        // if VX == VY then
+        // sne Vx Vy
         case I_9XY0: {
             if(V(c.x) != V(c.y)) skip_next = 1;
             break;
         }
 
-        // I = NNN
+        // mov I nnn
         case I_ANNN: {
             I = c.n;
             break;
         }
-        // jump v0 + NNN
+        // jmp0 nnn
         case I_BNNN: {
             pc = V(0) + c.n;
             break;
         }
 
-        // VX = rand() & NN
+        // rnd Vx nn
         case I_CXNN: {
             V(c.x) = rand() & (c.n & 0xFF);
             break;
         }
-        // sprite VX VY N
+        // drw Vx Vy n
         case I_DXYN: {
             assert(0 && "TODO: I_DXYN - Not implemented");
         }
 
-        // if VX -key then
+        // skp Vx
         case I_EX9E:
             assert(0 && "TODO: I_EX9E - Not implemented");
-        // if VX key then
+        // sknp Vx
         case I_EXA1:
             assert(0 && "TODO: I_EXA1 - Not implemented");
 
-        // VX = delay_timer
+        // mov Vx DT
         case I_FX07: {
             V(c.x) = delay_timer;
             break;
         }
-        // VX = key
+        // mov Vx K
         case I_FX0A:
             assert(0 && "TODO: I_FX0A - Not implemented");
-        // delay_timer = VX
+        // mov DT Vx
         case I_FX15: {
             delay_timer = V(c.x);
             break;
         }
-        // sound_timer = VX
+        // mov ST Vx
         case I_FX18: {
             sound_timer = V(c.x);
             break;
         }
 
-        // I += VX
+        // add I Vx
         case I_FX1E: {
             I += V(c.x);
             break;
         }
-        // I = hex VX
+        // mov I Vx
         case I_FX29:
             assert(0 && "TODO: I_FX29 - Not implemented");
 
-        // bcd VX
+        // mov B Vx
         case I_FX33:
             assert(0 && "TODO: I_FX33 - Not implemented");
-        // save VX
+        // mov [I] Vx
         case I_FX55: {
             for(int i = 0; i <= c.x; i++) {
                 memory[I + i] = V(i);
             }
             break;
         }
-        // load VX
+        // mov Vx [I]
         case I_FX65: {
             for(int i = 0; i <= c.x; i++) {
                 V(i) = memory[I + i];

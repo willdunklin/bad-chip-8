@@ -14,20 +14,6 @@ typedef struct {
     uint16_t n;           // 12 bit immediate value
 } Command;
 
-void command_print(Command c) {
-    printf("command:\n");
-    printf("  type: 0x%X\n", c.type);
-    printf("  x:    0x%X\n", c.x);
-    printf("  y:    0x%X\n", c.y);
-    printf("  n:    0x%X\n", c.n);
-    printf("\n");
-}
-
-void command_opcode_debug(uint16_t opcode) {
-    printf("opcode:\n  0x%X\n", opcode);
-    command_print(command_parse_opcode(opcode));
-}
-
 Command command_parse_opcode(uint16_t opcode) {
     Command c = {0};
     c.type = opcode; // variables in opcodes will be extracted below
@@ -52,6 +38,12 @@ Command command_parse_opcode(uint16_t opcode) {
             c.type |= 0x0010; // set   _XY_ (_01_)
             c.x = nibbles[1];
             c.y = nibbles[2];
+
+            if (nibbles[0] == 0xD) {
+                // handle degenerate case 0xDXYN
+                c.type |= 0x000F; // set    ___N (___F)
+                c.n = nibbles[3];
+            }
             break;
         }
 
@@ -97,6 +89,20 @@ Command command_parse_opcode(uint16_t opcode) {
     }
 
     return c;
+}
+
+void command_print(Command c) {
+    printf("command:\n");
+    printf("  type: 0x%X\n", c.type);
+    printf("  x:    0x%X\n", c.x);
+    printf("  y:    0x%X\n", c.y);
+    printf("  n:    0x%X\n", c.n);
+    printf("\n");
+}
+
+void command_opcode_debug(uint16_t opcode) {
+    printf("opcode:\n  0x%X\n", opcode);
+    command_print(command_parse_opcode(opcode));
 }
 
 #endif // CHIP8_COMMAND_H

@@ -39,6 +39,6 @@ typedef enum {
     I_FX33 = 0xF033, // bcd VX            (decode VX into binary coded decimal)
     I_FX55 = 0xF055, // save VX           (save V0-VX to memory[I:I+X])
     I_FX65 = 0xF065  // load VX           (load V0-VX from memory[I:I+X])
-} instruction;
+} InstructionType;
 
 #endif // CHIP8_INSTRUCTION_H

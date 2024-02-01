@@ -29,8 +29,55 @@ void test() {
     print_inst(token_parse_line("mov Va [I] v9"));
 }
 
+uint16_t line_to_instruction_type(char* line) {
+    Instruction ins = token_parse_line(line);
+    Command cmd = command_parse_opcode(ins.opcode);
+    // printf("Ins: %04X\n", ins.opcode);
+    // printf("Cmd: %04X\n\n", cmd.type);
+    return cmd.type;
+}
+
+void test_all_codes() {
+    assert(line_to_instruction_type("call 342")     == 0x2FFF);
+    assert(line_to_instruction_type("cls")          == 0x00E0);
+    assert(line_to_instruction_type("drw  V1 V2 3") == 0xD01F);
+    assert(line_to_instruction_type("jmp  1000")    == 0x1FFF);
+    assert(line_to_instruction_type("jmp0 3494")    == 0xBFFF);
+    assert(line_to_instruction_type("mov  V3 250")  == 0x60FF);
+    assert(line_to_instruction_type("mov  V1 V2")   == 0x8010);
+    assert(line_to_instruction_type("mov  V3 DT")   == 0xF007);
+    assert(line_to_instruction_type("mov  V2 K")    == 0xF00A);
+    assert(line_to_instruction_type("mov  V4 [I]")  == 0xF065);
+    assert(line_to_instruction_type("mov  I 496")   == 0xAFFF);
+    assert(line_to_instruction_type("mov  DT V7")   == 0xF015);
+    assert(line_to_instruction_type("mov  ST V8")   == 0xF018);
+    assert(line_to_instruction_type("mov  F V5")    == 0xF029);
+    assert(line_to_instruction_type("mov  B V9")    == 0xF033);
+    assert(line_to_instruction_type("mov  [I] Va")  == 0xF055);
+    assert(line_to_instruction_type("rnd  V0 13")   == 0xC0FF);
+    assert(line_to_instruction_type("ret")          == 0x00EE);
+    assert(line_to_instruction_type("se   V9 131")  == 0x30FF);
+    assert(line_to_instruction_type("se   V3 V4")   == 0x5010);
+    assert(line_to_instruction_type("sne  V6 70")   == 0x40FF);
+    assert(line_to_instruction_type("sne  V6 V7")   == 0x9010);
+    assert(line_to_instruction_type("skp  Vb")      == 0xE09E);
+    assert(line_to_instruction_type("sknp Ve")      == 0xE0A1);
+    assert(line_to_instruction_type("add  Vc 96")   == 0x70FF);
+    assert(line_to_instruction_type("add  Vd Ve")   == 0x8014);
+    assert(line_to_instruction_type("add  I V3")    == 0xF01E);
+    assert(line_to_instruction_type("sub  Vd V2")   == 0x8015);
+    assert(line_to_instruction_type("subn V4 V3")   == 0x8017);
+    assert(line_to_instruction_type("and  V6 V6")   == 0x8012);
+    assert(line_to_instruction_type("or   V7 V5")   == 0x8011);
+    assert(line_to_instruction_type("xor  V8 V2")   == 0x8013);
+    assert(line_to_instruction_type("shr  V0")      == 0x8016);
+    assert(line_to_instruction_type("shl  V9")      == 0x801E);
+}
+
 
 int main(int argc, char** argv) {
+    test_all_codes();
+
     if (argc < 3) {
         printf("Usage: %s <input-asm> <output-bin>\n", argv[0]);
         return 1;
