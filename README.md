@@ -5,6 +5,9 @@
 ```bash
 cmake -B ./build -G Ninja
 cmake --build ./build && ./build/chip8
+
+# to try assembler run the following binary (after building of course)
+./build/chip8asm ./test/foo.asm ./test/bar.bin
 ```
 
 ## Resources
