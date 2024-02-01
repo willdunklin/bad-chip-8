@@ -12,7 +12,6 @@ target_sources(
         instruction.h
         display.h
         command.h
-        command.c
 )
 
 target_sources(
@@ -22,5 +21,4 @@ target_sources(
         token.h
         instruction.h
         command.h
-        command.c
 )
