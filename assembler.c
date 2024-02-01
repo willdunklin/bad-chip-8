@@ -29,11 +29,6 @@ void test() {
     print_inst(token_parse_line("mov Va [I] v9"));
 }
 
-typedef struct {
-  uint16_t* items;
-  size_t count;
-  size_t capacity;
-} Opcodes;
 
 int main(int argc, char** argv) {
     if (argc < 3) {

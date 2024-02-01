@@ -125,8 +125,12 @@ typedef struct {
     Token args[4];
 } Instruction;
 
+typedef struct {
+  uint16_t* items;
+  size_t count;
+  size_t capacity;
+} Opcodes;
 
-Instruction token_instruction_from_line(char* line);
 
 char* token_next(char* line) {
     while (*line != ' ' && *line != '\0') {
