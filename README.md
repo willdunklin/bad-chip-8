@@ -3,7 +3,7 @@
 ## Quick Start
 
 ```bash
-cmake -B ./build -G Ninja
+cmake -B ./build -G Ninja  # -G Ninja is optional but recommended
 cmake --build ./build && ./build/chip8
 
 # to try assembler run the following binary (after building of course)
@@ -27,3 +27,5 @@ See more in [assembly.md](./assembly.md).
 - [Cowgod's Chip-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
 - [Wikipedia](https://en.wikipedia.org/wiki/CHIP-8)
 - [Instruction Set Reference](https://johnearnest.github.io/Octo/docs/chip8ref.pdf)
+- [CMake Docs](https://cmake.org/cmake/help/latest/index.html)
+- [CMake Download](https://cmake.org/download/)
