@@ -57,17 +57,17 @@ void step() {
 
         // se Vx nn
         case O_3XNN: {
-            if(registers[c.x] == (c.n & 0xFF)) pc += 2;
+            if(registers[c.x] == (c.n & 0xFF))   pc += 2;
             break;
         }
         // sne Vx nn
         case O_4XNN: {
-            if(registers[c.x] != (c.n & 0xFF)) pc += 2;
+            if(registers[c.x] != (c.n & 0xFF))   pc += 2;
             break;
         }
         // se Vx Vy
         case O_5XY0: {
-            if(registers[c.x] != registers[c.y])       pc += 2;
+            if(registers[c.x] != registers[c.y]) pc += 2;
             break;
         }
 
@@ -105,21 +105,17 @@ void step() {
 
         // add Vx Vy  (VF = 1 on carry)
         case O_8XY4: {
-            if(registers[c.x] + registers[c.y] > 0xFF) {
-                registers[0xF] = 1;
-            } else {
-                registers[0xF] = 0;
-            }
+            if(registers[c.x] + registers[c.y] > 0xFF) registers[0xF] = 1;
+            else                                       registers[0xF] = 0;
+
             registers[c.x] += registers[c.y];
             break;
         }
         // sub Vx Vy  (VF = 0 on borrow)
         case O_8XY5: {
-            if(registers[c.x] >= registers[c.y]) {
-                registers[0xF] = 1;
-            } else {
-                registers[0xF] = 0;
-            }
+            if(registers[c.x] >= registers[c.y]) registers[0xF] = 1;
+            else                                 registers[0xF] = 0;
+
             registers[c.x] -= registers[c.y];
             break;
         }
@@ -131,11 +127,9 @@ void step() {
         }
         // subn Vx Vy  (VF = 0 on borrow)
         case O_8XY7: {
-            if(registers[c.y] >= registers[c.x]) {
-                registers[0xF] = 1;
-            } else {
-                registers[0xF] = 0;
-            }
+            if(registers[c.y] >= registers[c.x]) registers[0xF] = 1;
+            else                                 registers[0xF] = 0;
+
             registers[c.x] = registers[c.y] - registers[c.x];
             break;
         }

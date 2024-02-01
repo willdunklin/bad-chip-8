@@ -164,7 +164,6 @@ typedef struct {
 } Instruction;
 
 
-
 char* token_next(char* line) {
     while (*line != ' ' && *line != '\0') {
         line++;
@@ -195,61 +194,34 @@ Instruction token_extract_from_line(char* line) {
 
         // printf("str: %s\n", str);
 
-        if (strcmp(str, "call") == 0) {
-            token->literal = T_CALL;
-        } else if (strcmp(str, "cls") == 0) {
-            token->literal = T_CLS;
-        } else if (strcmp(str, "drw") == 0) {
-            token->literal = T_DRW;
-        } else if (strcmp(str, "jmp") == 0) {
-            token->literal = T_JMP;
-        } else if (strcmp(str, "jmp0") == 0) {
-            token->literal = T_JMP0;
-        } else if (strcmp(str, "mov") == 0) {
-            token->literal = T_MOV;
-        } else if (strcmp(str, "rnd") == 0) {
-            token->literal = T_RND;
-        } else if (strcmp(str, "ret") == 0) {
-            token->literal = T_RET;
-        } else if (strcmp(str, "se") == 0) {
-            token->literal = T_SE;
-        } else if (strcmp(str, "sne") == 0) {
-            token->literal = T_SNE;
-        } else if (strcmp(str, "skp") == 0) {
-            token->literal = T_SKP;
-        } else if (strcmp(str, "sknp") == 0) {
-            token->literal = T_SKNP;
-        } else if (strcmp(str, "add") == 0) {
-            token->literal = T_ADD;
-        } else if (strcmp(str, "sub") == 0) {
-            token->literal = T_SUB;
-        } else if (strcmp(str, "subn") == 0) {
-            token->literal = T_SUBN;
-        } else if (strcmp(str, "and") == 0) {
-            token->literal = T_AND;
-        } else if (strcmp(str, "or") == 0) {
-            token->literal = T_OR;
-        } else if (strcmp(str, "xor") == 0) {
-            token->literal = T_XOR;
-        } else if (strcmp(str, "shr") == 0) {
-            token->literal = T_SHR;
-        } else if (strcmp(str, "shl") == 0) {
-            token->literal = T_SHL;
-        } else if (strcmp(str, "I") == 0) {
-            token->literal = T_I;
-        } else if (strcmp(str, "[I]") == 0) {
-            token->literal = T_ADDR_I;
-        } else if (strcmp(str, "K") == 0) {
-            token->literal = T_K;
-        } else if (strcmp(str, "B") == 0) {
-            token->literal = T_B;
-        } else if (strcmp(str, "DT") == 0) {
-            token->literal = T_DT;
-        } else if (strcmp(str, "ST") == 0) {
-            token->literal = T_ST;
-        } else if (strcmp(str, "F") == 0) {
-            token->literal = T_F;
-        } else {
+        if (strcmp(str, "call") == 0)      token->literal = T_CALL;
+        else if (strcmp(str, "cls") == 0)  token->literal = T_CLS;
+        else if (strcmp(str, "drw") == 0)  token->literal = T_DRW;
+        else if (strcmp(str, "jmp") == 0)  token->literal = T_JMP;
+        else if (strcmp(str, "jmp0") == 0) token->literal = T_JMP0;
+        else if (strcmp(str, "mov") == 0)  token->literal = T_MOV;
+        else if (strcmp(str, "rnd") == 0)  token->literal = T_RND;
+        else if (strcmp(str, "ret") == 0)  token->literal = T_RET;
+        else if (strcmp(str, "se") == 0)   token->literal = T_SE;
+        else if (strcmp(str, "sne") == 0)  token->literal = T_SNE;
+        else if (strcmp(str, "skp") == 0)  token->literal = T_SKP;
+        else if (strcmp(str, "sknp") == 0) token->literal = T_SKNP;
+        else if (strcmp(str, "add") == 0)  token->literal = T_ADD;
+        else if (strcmp(str, "sub") == 0)  token->literal = T_SUB;
+        else if (strcmp(str, "subn") == 0) token->literal = T_SUBN;
+        else if (strcmp(str, "and") == 0)  token->literal = T_AND;
+        else if (strcmp(str, "or") == 0)   token->literal = T_OR;
+        else if (strcmp(str, "xor") == 0)  token->literal = T_XOR;
+        else if (strcmp(str, "shr") == 0)  token->literal = T_SHR;
+        else if (strcmp(str, "shl") == 0)  token->literal = T_SHL;
+        else if (strcmp(str, "I") == 0)    token->literal = T_I;
+        else if (strcmp(str, "[I]") == 0)  token->literal = T_ADDR_I;
+        else if (strcmp(str, "K") == 0)    token->literal = T_K;
+        else if (strcmp(str, "B") == 0)    token->literal = T_B;
+        else if (strcmp(str, "DT") == 0)   token->literal = T_DT;
+        else if (strcmp(str, "ST") == 0)   token->literal = T_ST;
+        else if (strcmp(str, "F") == 0)    token->literal = T_F;
+        else {
             if (str[0] == 'V') {
                 token->literal = T_VX;
                 // by masking the token->value for Vx now, we can use it safely later
