@@ -1,4 +1,4 @@
-# CHIP8 Attempt
+# CHIP8 in an Afternoon
 
 ## Quick Start
 
@@ -9,6 +9,18 @@ cmake --build ./build && ./build/chip8
 # to try assembler run the following binary (after building of course)
 ./build/chip8asm ./test/foo.asm ./test/bar.bin
 ```
+
+## Assembly Info
+
+I've added a simple assembler (but don't try to push it very far). It ignores spaces, blank lines and nothing else. The basic syntax is as follows:
+
+```asm
+mov  v0 2
+jmp0 198
+add  v0 60
+```
+
+See more in [assembly.md](./assembly.md).
 
 ## Resources
 
