@@ -1,4 +1,4 @@
-# CHIP8 in an Afternoon
+# Questionable (C)HIP-8
 
 ## Quick Start
 
