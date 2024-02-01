@@ -1,6 +1,8 @@
-jmp 28
-ret
-call 400
-drw V9 V3 4
-add I V2
-mov Va [I]
+mov V0 4
+mov V1 5
+mov V2 1
+sne V1 0
+jmp 520
+add I V0
+sub V1 V2
+jmp 518

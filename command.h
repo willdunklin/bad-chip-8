@@ -16,7 +16,7 @@ typedef struct {
 
 Command command_parse_opcode(uint16_t opcode) {
     Command c = {0};
-    c.type = opcode; // variables in opcodes will be extracted below
+    c.type = opcode; // the variables in opcodes will be extracted below
 
     // break 16-bit opcode into 4, 4-bit nibbles
     uint8_t nibbles[4];

@@ -10,6 +10,11 @@ cmake --build ./build && ./build/chip8
 ./build/chip8asm ./test/foo.asm ./test/bar.bin
 ```
 
+### Build, Assbemble and Run
+```bash
+clear; cmake --build ./build && ./build/chip8asm test/foo.asm test/bar.bin > /dev/null && ./build/chip8 test/bar.bin
+```
+
 ## Assembly Info
 
 I've added a simple assembler (but don't try to push it very far). It ignores spaces, blank lines and nothing else. The basic syntax is as follows:

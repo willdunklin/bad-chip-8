@@ -2,26 +2,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "instruction.h"
 #include "command.h"
 #include "display.h"
+#include "util.h"
 
 #define V(X)  registers[X]   // V0-VF (must use numeric index 0-15, 0x0-0xf)
 
 uint8_t memory[4096] = {0};
-uint16_t I;                  // index register (used for memory addresses)
+uint16_t I = 0;              // index register (used for memory addresses)
 uint16_t pc = 0x200;         // program counter (0x200 is presumed entrypoint)
 uint8_t registers[16] = {0}; // V0-VF registers
 uint16_t stack[16] = {0};    // stack
 uint8_t sp = 0;              // stack pointer
-uint8_t skip_next = 0;       // additional flad used in conditionals
 
 uint8_t delay_timer; // TODO: decrement at 60hz
 uint8_t sound_timer; // TODO: decrement at 60hz
 
-void run_command(Command c) {
-    // skip_next = 0;
+void step() {
+    printf("\n");
+    printf("PC: %04X  |  I: %04X\n", pc, I);
+    printf("V[0-2]: %02X, %02X, %02X\n", V(0), V(1), V(2));
+    uint16_t opcode = memory[pc] << 8 | memory[pc + 1]; // read big-endian 16-bit opcode
+    printf("Opcode: %04X\n", opcode);
+    Command c = command_parse_opcode(opcode);
 
     switch(c.type) {
         // cls
@@ -38,7 +45,7 @@ void run_command(Command c) {
         }
         // jmp nnn
         case I_1NNN: {
-            pc = c.n;
+            pc = c.n - 2; // -2 because pc is incremented at end of step
             break;
         }
         // call nnn
@@ -52,17 +59,17 @@ void run_command(Command c) {
 
         // se Vx nn
         case I_3XNN: {
-            if(V(c.x) == (c.n & 0xFF)) skip_next = 1;
+            if(V(c.x) == (c.n & 0xFF)) pc += 2;
             break;
         }
         // sne Vx nn
         case I_4XNN: {
-            if(V(c.x) != (c.n & 0xFF)) skip_next = 1;
+            if(V(c.x) != (c.n & 0xFF)) pc += 2;
             break;
         }
         // se Vx Vy
         case I_5XY0: {
-            if(V(c.x) != V(c.y))       skip_next = 1;
+            if(V(c.x) != V(c.y))       pc += 2;
             break;
         }
 
@@ -143,7 +150,7 @@ void run_command(Command c) {
 
         // sne Vx Vy
         case I_9XY0: {
-            if(V(c.x) != V(c.y)) skip_next = 1;
+            if(V(c.x) != V(c.y)) pc += 2;
             break;
         }
 
@@ -154,7 +161,7 @@ void run_command(Command c) {
         }
         // jmp0 nnn
         case I_BNNN: {
-            pc = V(0) + c.n;
+            pc = V(0) + c.n - 2; // -2 because pc is incremented at end of step
             break;
         }
 
@@ -221,21 +228,38 @@ void run_command(Command c) {
             break;
         }
 
+        case 0: {
+            printf("nop: %d\n", c.type);
+            break;
+        }
         default: {
             printf("Unknown instruction: %d\n", c.type);
             assert(0 && "ERROR: Unknown instruction");
             break;
         }
     }
+
+    pc += 2; // increment program counter one word
 }
 
-int main() {
-    // command_opcode_debug(0x8A76);
-    // command_opcode_debug(0x203F);
-    // command_opcode_debug(0x2A3F);
-    // command_opcode_debug(0x3FA3);
-    // command_opcode_debug(0x3000);
-    // command_opcode_debug(0x8A23);
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        printf("Usage: %s <input-bin>\n", argv[0]);
+        return 1;
+    }
+
+    String input = {0};
+    if (!util_read_file(argv[1], &input)) {
+        printf("Error: Could not read file: %s\n", argv[1]);
+        return 1;
+    }
+
+    memcpy(memory, input.items, input.count);
+
+    // just test a few steps for now
+    for (int i = 0; i < 30; i++) {
+        step();
+    }
 
     return 0;
 }
