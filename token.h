@@ -7,44 +7,83 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "instruction.h"
 #include "util.h"
 
 // Commands:
-// call addr     |  I_2NNN  |  0x2FFF
-// cls           |  I_00E0  |  0x00E0
-// drw  Vx Vy N  |  I_DXYN  |  0xD01F   (VF = 1 on collision)
-// jmp  addr     |  I_1NNN  |  0x1FFF
-// jmp0 addr     |  I_BNNN  |  0xBFFF
-// mov  Vx byte  |  I_6XNN  |  0x60FF
-// mov  Vx Vy    |  I_8XY0  |  0x8010
-// mov  Vx DT    |  I_FX07  |  0xF007
-// mov  Vx K     |  I_FX0A  |  0xF00A
-// mov  Vx [I]   |  I_FX65  |  0xF065
-// mov  I addr   |  I_ANNN  |  0xAFFF
-// mov  DT Vx    |  I_FX15  |  0xF015
-// mov  ST Vx    |  I_FX18  |  0xF018
-// mov  F Vx     |  I_FX29  |  0xF029
-// mov  B Vx     |  I_FX33  |  0xF033
-// mov  [I] Vx   |  I_FX55  |  0xF055
-// rnd  Vx byte  |  I_CXNN  |  0xC0FF
-// ret           |  I_00EE  |  0x00EE
-// se   Vx byte  |  I_3XNN  |  0x30FF
-// se   Vx Vy    |  I_5XY0  |  0x5010
-// sne  Vx byte  |  I_4XNN  |  0x40FF
-// sne  Vx Vy    |  I_9XY0  |  0x9010
-// skp  Vx       |  I_EX9E  |  0xE09E
-// sknp Vx       |  I_EXA1  |  0xE0A1
-// add  Vx byte  |  I_7XNN  |  0x70FF
-// add  Vx Vy    |  I_8XY4  |  0x8014   (VF = 1 on carry)
-// add  I Vx     |  I_FX1E  |  0xF01E
-// sub  Vx Vy    |  I_8XY5  |  0x8015   (VF = NOT borrow)
-// subn Vx Vy    |  I_8XY7  |  0x8017   (VF = NOT borrow)
-// and  Vx Vy    |  I_8XY2  |  0x8012
-// or   Vx Vy    |  I_8XY1  |  0x8011
-// xor  Vx Vy    |  I_8XY3  |  0x8013
-// shr  Vx       |  I_8XY6  |  0x8016   (VF = LSB)
-// shl  Vx       |  I_8XYE  |  0x801E   (VF = MSB)
+// call addr     |  O_2NNN  |  0x2FFF
+// cls           |  O_00E0  |  0x00E0
+// drw  Vx Vy N  |  O_DXYN  |  0xD01F   (VF = 1 on collision)
+// jmp  addr     |  O_1NNN  |  0x1FFF
+// jmp0 addr     |  O_BNNN  |  0xBFFF
+// mov  Vx byte  |  O_6XNN  |  0x60FF
+// mov  Vx Vy    |  O_8XY0  |  0x8010
+// mov  Vx DT    |  O_FX07  |  0xF007
+// mov  Vx K     |  O_FX0A  |  0xF00A
+// mov  Vx [I]   |  O_FX65  |  0xF065
+// mov  I addr   |  O_ANNN  |  0xAFFF
+// mov  DT Vx    |  O_FX15  |  0xF015
+// mov  ST Vx    |  O_FX18  |  0xF018
+// mov  F Vx     |  O_FX29  |  0xF029
+// mov  B Vx     |  O_FX33  |  0xF033
+// mov  [I] Vx   |  O_FX55  |  0xF055
+// rnd  Vx byte  |  O_CXNN  |  0xC0FF
+// ret           |  O_00EE  |  0x00EE
+// se   Vx byte  |  O_3XNN  |  0x30FF
+// se   Vx Vy    |  O_5XY0  |  0x5010
+// sne  Vx byte  |  O_4XNN  |  0x40FF
+// sne  Vx Vy    |  O_9XY0  |  0x9010
+// skp  Vx       |  O_EX9E  |  0xE09E
+// sknp Vx       |  O_EXA1  |  0xE0A1
+// add  Vx byte  |  O_7XNN  |  0x70FF
+// add  Vx Vy    |  O_8XY4  |  0x8014   (VF = 1 on carry)
+// add  I Vx     |  O_FX1E  |  0xF01E
+// sub  Vx Vy    |  O_8XY5  |  0x8015   (VF = NOT borrow)
+// subn Vx Vy    |  O_8XY7  |  0x8017   (VF = NOT borrow)
+// and  Vx Vy    |  O_8XY2  |  0x8012
+// or   Vx Vy    |  O_8XY1  |  0x8011
+// xor  Vx Vy    |  O_8XY3  |  0x8013
+// shr  Vx       |  O_8XY6  |  0x8016   (VF = LSB)
+// shl  Vx       |  O_8XYE  |  0x801E   (VF = MSB)
+
+// opcode to enum value substitution: X->0, Y->1, N->F
+// - look at name-of-enum vs enum-value to translate
+//   - example: O_8XY3 -> 0x8013, O_DXYN -> 0xD01F
+typedef enum {
+    O_00E0 = 0x00E0, // clear
+    O_00EE = 0x00EE, // return            (exit subroutine)
+    O_1NNN = 0x1FFF, // jump NNN
+    O_2NNN = 0x2FFF, // NNN               (call subroutine)
+    O_3XNN = 0x30FF, // if VX != NN then
+    O_4XNN = 0x40FF, // if VX == NN then
+    O_5XY0 = 0x5010, // if VX != VY then
+    O_6XNN = 0x60FF, // VX = NN
+    O_7XNN = 0x70FF, // VX += NN
+    O_8XY0 = 0x8010, // VX = VY
+    O_8XY1 = 0x8011, // VX |= VY          (bitwise OR)
+    O_8XY2 = 0x8012, // VX &= VY          (bitwise AND)
+    O_8XY3 = 0x8013, // VX ^= VY          (bitwise XOR)
+    O_8XY4 = 0x8014, // VX += VY          (VF = 1 on carry)
+    O_8XY5 = 0x8015, // VX -= VY          (VF = 0 on borrow)
+    O_8XY6 = 0x8016, // VX >>= VY         (VF = LSB)
+    O_8XY7 = 0x8017, // VX -= VY          (VF = 0 on borrow)
+    O_8XYE = 0x801E, // VX <<= VY         (VF = MSB)
+    O_9XY0 = 0x9010, // if VX == VY then
+    O_ANNN = 0xAFFF, // I = NNN
+    O_BNNN = 0xBFFF, // jump0 + NNN
+    O_CXNN = 0xC0FF, // VX = rand() & NN  (rand <- [0, 255])
+    O_DXYN = 0xD01F, // sprite VX VY N    (draw sprite, VF = 1 on collision)
+    O_EX9E = 0xE09E, // if VX -key then   (is a key not pressed)
+    O_EXA1 = 0xE0A1, // if VX key then    (is a key pressed)
+    O_FX07 = 0xF007, // VX = delay_timer
+    O_FX0A = 0xF00A, // VX = key          (wait for key press)
+    O_FX15 = 0xF015, // delay_timer = VX
+    O_FX18 = 0xF018, // sound_timer = VX
+    O_FX1E = 0xF01E, // I += VX
+    O_FX29 = 0xF029, // I = hex VX        (set I to a hex character)
+    O_FX33 = 0xF033, // bcd VX            (decode VX into binary coded decimal)
+    O_FX55 = 0xF055, // save VX           (save V0-VX to memory[I:I+X])
+    O_FX65 = 0xF065  // load VX           (load V0-VX from memory[I:I+X])
+} OpcodeType;
 
 // Tokens:
 // - call
@@ -77,7 +116,6 @@
 //   - F
 //   - Vx
 //   - addr/byte/N -> int
-
 typedef enum {
     T_INVALID=0,
     // Instructions
@@ -125,11 +163,6 @@ typedef struct {
     Token args[4];
 } Instruction;
 
-typedef struct {
-  uint16_t* items;
-  size_t count;
-  size_t capacity;
-} Opcodes;
 
 
 char* token_next(char* line) {
@@ -147,10 +180,9 @@ Instruction token_extract_from_line(char* line) {
     Instruction instruction = {0};
 
     char* str = (char*)malloc(2048); // assuming that lines will be <2048 chars ((probably))
-    char* start = str;
+    char* start = str; // hold on to pointer to free later
     memset(str, 0, 2048);
     strcpy(str, line);
-
 
     // remove leading spaces
     while(*str == ' ') str++;

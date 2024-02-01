@@ -5,13 +5,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "instruction.h"
+#include "token.h"
 
 typedef struct {
-    InstructionType type; // 16 bit opcode (enum)
-    uint8_t x;            // 4 bit index into register array
-    uint8_t y;            // 4 bit index into register array
-    uint16_t n;           // 12 bit immediate value
+    OpcodeType type; // 16 bit opcode (enum)
+    uint8_t x;       // 4 bit index into register array
+    uint8_t y;       // 4 bit index into register array
+    uint16_t n;      // 12 bit immediate value
 } Command;
 
 Command command_parse_opcode(uint16_t opcode) {

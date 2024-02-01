@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <byteswap.h>
 
-#include "instruction.h"
 #include "command.h"
 #include "token.h"
 #include "util.h"
@@ -29,7 +28,7 @@ void test() {
     print_inst(token_parse_line("mov Va [I] v9"));
 }
 
-uint16_t line_to_instruction_type(char* line) {
+OpcodeType line_to_instruction_type(char* line) {
     Instruction ins = token_parse_line(line);
     Command cmd = command_parse_opcode(ins.opcode);
     // printf("Ins: %04X\n", ins.opcode);
@@ -73,6 +72,12 @@ void test_all_codes() {
     assert(line_to_instruction_type("shr  V0")      == 0x8016);
     assert(line_to_instruction_type("shl  V9")      == 0x801E);
 }
+
+typedef struct {
+  uint16_t* items;
+  size_t count;
+  size_t capacity;
+} Opcodes;
 
 
 int main(int argc, char** argv) {

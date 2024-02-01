@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 #define UTIL_INSTRUCTION_START 0x200 // where CHIP-8 programs start in memory
-
 #define UTIL_INIT_CAP 256
 
 #define util_da_append(da, item)                                                   \
@@ -31,7 +30,6 @@
     (da)->count += (new_count);                                                      \
   } while (0)
 
-
 typedef struct {
   char* items;
   size_t count;
@@ -43,9 +41,6 @@ typedef struct {
   size_t count;
   size_t capacity;
 } CString_List;
-
-bool util_read_file(const char *path, String *out);
-bool util_write_file(const char *path, void *data, size_t length);
 
 bool util_read_file(const char *path, String *out) {
   FILE* file = fopen(path, "rb");
