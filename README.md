@@ -30,7 +30,7 @@ See more in [assembly.md](./assembly.md).
 ## Resources
 
 - [Cowgod's Chip-8 Technical Reference](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
-- [Wikipedia](https://en.wikipedia.org/wiki/CHIP-8)
+- [CHIP-8 Wikipedia](https://en.wikipedia.org/wiki/CHIP-8)
 - [Instruction Set Reference](https://johnearnest.github.io/Octo/docs/chip8ref.pdf)
 - [CMake Docs](https://cmake.org/cmake/help/latest/index.html)
 - [CMake Download](https://cmake.org/download/)
