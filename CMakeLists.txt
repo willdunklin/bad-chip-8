@@ -11,7 +11,9 @@ target_sources(
         token.h
         display.h
         command.h
+        key.h
 )
+target_link_libraries(chip8 PRIVATE ncurses)
 
 target_sources(
     chip8asm

@@ -4,11 +4,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "token.h"
 #include "command.h"
 #include "display.h"
 #include "util.h"
+#include "key.h"
 
 uint8_t memory[4096] = {0};
 uint16_t I = 0;              // index register (used for memory addresses)
@@ -21,17 +23,13 @@ uint8_t delay_timer; // TODO: decrement at 60hz
 uint8_t sound_timer; // TODO: decrement at 60hz
 
 void step() {
-    printf("\n");
-    printf("PC: %04X  |  I: %04X {%02X}\n", pc, I, memory[I]);
-    printf("V[0-2]: %02X, %02X, %02X\n", registers[0], registers[1], registers[2]);
     uint16_t opcode = memory[pc] << 8 | memory[pc + 1]; // read big-endian 16-bit opcode
-    printf("Opcode: %04X\n", opcode);
     Command c = command_parse_opcode(opcode);
 
     switch(c.type) {
         // cls
         case O_00E0: {
-            clear_display();
+            display_clear();
             break;
         }
         // ret
@@ -57,12 +55,12 @@ void step() {
 
         // se Vx nn
         case O_3XNN: {
-            if(registers[c.x] == (c.n & 0xFF))   pc += 2;
+            if(registers[c.x] == (c.n & 0xFF)) pc += 2;
             break;
         }
         // sne Vx nn
         case O_4XNN: {
-            if(registers[c.x] != (c.n & 0xFF))   pc += 2;
+            if(registers[c.x] != (c.n & 0xFF)) pc += 2;
             break;
         }
         // se Vx Vy
@@ -164,15 +162,22 @@ void step() {
         }
         // drw Vx Vy n
         case O_DXYN: {
-            assert(0 && "TODO: O_DXYN - Not implemented");
+            registers[0xF] = display_draw_sprite(registers[c.x], registers[c.y], c.n & 0xF, memory + I);
+            break;
         }
 
         // skp Vx
-        case O_EX9E:
-            assert(0 && "TODO: O_EX9E - Not implemented");
+        case O_EX9E: {
+            int key = get_hex_key_timeout(100);
+            if(key == registers[c.x]) pc += 2;
+            break;
+        }
         // sknp Vx
-        case O_EXA1:
-            assert(0 && "TODO: O_EXA1 - Not implemented");
+        case O_EXA1: {
+            int key = get_hex_key_timeout(100);
+            if(key != registers[c.x]) pc += 2;
+            break;
+        }
 
         // mov Vx DT
         case O_FX07: {
@@ -180,8 +185,10 @@ void step() {
             break;
         }
         // mov Vx K
-        case O_FX0A:
-            assert(0 && "TODO: O_FX0A - Not implemented");
+        case O_FX0A: {
+            registers[c.x] = get_hex_key_block();
+            break;
+        }
         // mov DT Vx
         case O_FX15: {
             delay_timer = registers[c.x];
@@ -199,12 +206,18 @@ void step() {
             break;
         }
         // mov I Vx
-        case O_FX29:
-            assert(0 && "TODO: O_FX29 - Not implemented");
+        case O_FX29: {
+            I = registers[c.x] * 5; // 5 bytes per character
+            break;
+        }
 
         // mov B Vx
-        case O_FX33:
-            assert(0 && "TODO: O_FX33 - Not implemented");
+        case O_FX33: {
+            memory[I]     = (registers[c.x] / 100) % 10;
+            memory[I + 1] = (registers[c.x] / 10) % 10;
+            memory[I + 2] = (registers[c.x]) % 10;
+            break;
+        }
         // mov [I] Vx
         case O_FX55: {
             for(int i = 0; i <= c.x; i++) {
@@ -221,11 +234,11 @@ void step() {
         }
 
         case 0: {
-            printf("nop: %d\n", c.type);
+            // printf("nop: %d\n", c.type);
             break;
         }
         default: {
-            printf("Unknown instruction: %d\n", c.type);
+            // printf("Unknown instruction: %d\n", c.type);
             assert(0 && "ERROR: Unknown instruction");
             break;
         }
@@ -245,13 +258,22 @@ int main(int argc, char** argv) {
         printf("Error: Could not read file: %s\n", argv[1]);
         return 1;
     }
-
     memcpy(memory, input.items, input.count);
 
-    // just test a few steps for now
-    for (int i = 0; i < 60; i++) {
+    display_init();
+    display_clear();
+
+    while (1) {
+        display_refresh();
+        display_debug_info(pc, registers, I, sp, stack, memory, delay_timer, sound_timer);
+        while(get_hex_key_timeout(100) != 0);
+
         step();
+        display_refresh();
+        // sleep(1);
     }
+
+    display_end();
 
     return 0;
 }
